@@ -1,0 +1,10 @@
+**/*.pyc
+**/*.aux
+**/*.fls
+**/*.fdb_latexmk
+**/*.toc
+**/*.synctex.gz
+**/*.synctex(busy)
+**/*.vs
+**/bin/
+**/obj/

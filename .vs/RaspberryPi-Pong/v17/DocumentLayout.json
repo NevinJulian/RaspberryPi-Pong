@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Admin\\Desktop\\CSA\\Project\\RaspberryPi-Pong\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D349CB00-23AC-41CF-9180-F6F05023E0C8}|RaspberryPi-Pong\\RaspberryPi-Pong.csproj|c:\\users\\admin\\desktop\\csa\\project\\raspberrypi-pong\\raspberrypi-pong\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D349CB00-23AC-41CF-9180-F6F05023E0C8}|RaspberryPi-Pong\\RaspberryPi-Pong.csproj|solutionrelative:raspberrypi-pong\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\CSA\\Project\\RaspberryPi-Pong\\RaspberryPi-Pong\\Program.cs",
+              "RelativeDocumentMoniker": "RaspberryPi-Pong\\Program.cs",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\CSA\\Project\\RaspberryPi-Pong\\RaspberryPi-Pong\\Program.cs",
+              "RelativeToolTip": "RaspberryPi-Pong\\Program.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA8AAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-03-26T12:15:26.989Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

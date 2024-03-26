@@ -1,0 +1,2 @@
+cd $(TargetDir)
+"$(SolutionDir)\SecureUpload.exe" . pi-hslu:netcore/$(ProjectName)

@@ -32,15 +32,18 @@ internal class Ball
         Position = new PointF(newX, newY);
     }
 
-    public bool IsCollidingWithLeftWall() => Position.X < Radius;
+    public bool IsCollidingWithLeftWall() => Position.X <= Radius;
 
-    public bool IsCollidingWithRightWall() => Position.X > canvasWidth - Radius;
+    public bool IsCollidingWithRightWall() => Position.X >= canvasWidth - Radius;
 
-    public bool IsCollidingWithTopWall() => Position.Y > canvasHeight - Radius;
+    public bool IsCollidingWithTopWall() => Position.Y >= canvasHeight - Radius;
 
-    public bool IsCollidingWithBottomWall() => Position.Y < Radius;
+    public bool IsCollidingWithBottomWall() => Position.Y <= Radius;
 
-    public bool IsCollidingWithPaddle(Paddle paddle) => Position.Y - Radius < paddle.Position.Location.Y + paddle.Position.Height && Position.X > paddle.Position.X && Position.X < paddle.Position.X + paddle.Position.Width;
+    public bool IsCollidingWithPaddle(Paddle paddle) => 
+        Position.Y - Radius <= paddle.Position.Location.Y + paddle.Position.Height &&
+        Position.X > paddle.Position.X &&
+        Position.X < paddle.Position.X + paddle.Position.Width;
 
     public void Reset()
     {

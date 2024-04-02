@@ -16,14 +16,14 @@ internal class Paddle
         this.moveSpeed = moveSpeed;
     }
 
-    public void MoveRight()
+    public void MoveRight(int steps)
     {
-        Move(moveSpeed);
+        Move(moveSpeed * steps);
     }
 
-    public void MoveLeft()
+    public void MoveLeft(int steps)
     {
-        Move(-moveSpeed);
+        Move(-moveSpeed * steps);
     }
 
     private void Move(float deltaX)

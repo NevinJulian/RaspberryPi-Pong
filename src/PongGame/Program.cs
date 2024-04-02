@@ -5,14 +5,14 @@ namespace PongGame;
 
 internal class Program
 {
+    private const int DisplayWidth = 128;
+    private const int DisplayHeight = 64;
+
     private static Explorer700 exp;
     private static Paddle paddle;
     private static Ball ball;
     private static Scoreboard scoreboard;
     private static DateTime lastPaddleMove;
-
-    private const int DisplayWidth = 128;
-    private const int DisplayHeight = 64;
 
     private static bool GameStillRunning = true;
 
@@ -21,33 +21,38 @@ internal class Program
         Console.WriteLine("Pong Game Start...");
         exp = new Explorer700();
 
-        SetupGame();
+        await SetupGame();
+
+        await Task.Delay(TimeSpan.FromSeconds(2)); // Wait for 2 seconds before starting the game
+        Console.WriteLine("Starting Game loop...");
 
         while (GameStillRunning)
         {
-            // Execute Game loop
+            // Execute game loop
             HandleInput();
-            UpdateGameState();
+            await UpdateGameState();
             DrawGame();
 
             if (!GameStillRunning)
             {
                 DrawScore();
 
-                Thread.Sleep(2000);
+                await Task.Delay(TimeSpan.FromSeconds(3)); // Wait for 2 seconds before restarting the game
                 GameStillRunning = true;
                 scoreboard.ResetPlayerScore();
             }
 
-            await Task.Delay(20); // Adjust for game speed
+            await Task.Delay(TimeSpan.FromMilliseconds(20)); // Adjust for game speed
         }
     }
 
-    static void SetupGame()
+    static async Task SetupGame()
     {
         paddle = new Paddle(20, 0, 20, 7, DisplayHeight, 5);
         ball = new Ball(30, 100, 1, 1, 10, DisplayHeight, DisplayWidth);
-        scoreboard = new Scoreboard(0);
+        scoreboard = new Scoreboard();
+
+        await scoreboard.LoadPersistedHighScore();
     }
 
     static void HandleInput()
@@ -56,12 +61,12 @@ internal class Program
         {
             if (e.Keys.HasFlag(Keys.Down) && IsAllowedToMovePaddle())
             {
-                paddle.MoveRight();
+                paddle.MoveRight(GetAmountOfSteps(e.Keys));
                 lastPaddleMove = DateTime.UtcNow;
             }
             else if (e.Keys.HasFlag(Keys.Up) && IsAllowedToMovePaddle())
             {
-                paddle.MoveLeft();
+                paddle.MoveLeft(GetAmountOfSteps(e.Keys));
                 lastPaddleMove = DateTime.UtcNow;
             }
         };
@@ -71,9 +76,16 @@ internal class Program
             // Limit paddle movement to every 100ms
             return DateTime.UtcNow - lastPaddleMove > TimeSpan.FromMilliseconds(100);
         }
+
+        static int GetAmountOfSteps(Keys keys)
+        {
+            return keys.HasFlag(Keys.Center)
+                ? 3
+                : 1;
+        }
     }
 
-    static void UpdateGameState()
+    static async Task UpdateGameState()
     {
         // Move the ball
         ball.Move();
@@ -96,12 +108,15 @@ internal class Program
 
             // Increase player score
             scoreboard.IncrementPlayerScore();
+            Console.WriteLine($"Player Score: {scoreboard.PlayerScore}");
 
             // Increase ball speed
             ball.Velocity = new PointF(ball.Velocity.X * 1.1f, ball.Velocity.Y * 1.1f);
         }
         else if (ball.IsCollidingWithBottomWall())
         {
+            Console.WriteLine($"Game Over with score {scoreboard.PlayerScore}");
+
             // Reset the ball position and velocity
             ball.Reset();
 
@@ -110,6 +125,9 @@ internal class Program
             {
                 // It is a high score
                 Console.WriteLine($"New High Score: {scoreboard.HighScore}");
+
+                // Persist high score
+                await scoreboard.PersistHighScore();
             }
 
             GameStillRunning = false;

@@ -14,6 +14,8 @@ internal class Program
     private const int DisplayWidth = 128;
     private const int DisplayHeight = 64;
 
+    private static bool GameStillRunning = true;
+
     static async Task Main(string[] args)
     {
         Console.WriteLine("Pong Game Start...");
@@ -21,12 +23,23 @@ internal class Program
 
         SetupGame();
 
-        while (true)
+        while (GameStillRunning)
         {
             // Execute Game loop
             HandleInput();
             UpdateGameState();
             DrawGame();
+
+            if (!GameStillRunning)
+            {
+                DrawScore();
+
+                Thread.Sleep(2000);
+                GameStillRunning = true;
+
+                // Reset player score
+                scoreboard.ResetPlayerScore();
+            }
 
             await Task.Delay(20); // Adjust for game speed
         }
@@ -101,8 +114,7 @@ internal class Program
                 Console.WriteLine($"New High Score: {scoreboard.HighScore}");
             }
 
-            // Reset player score
-            scoreboard.ResetPlayerScore();
+            GameStillRunning = false;
         }
     }
 
@@ -115,5 +127,15 @@ internal class Program
         ball.Draw(g);
 
         exp.Display.Update(); // Update display
+    }
+
+    static void DrawScore()
+    {
+        Graphics g = exp.Display.Graphics;
+        g.Clear(Color.Black);
+
+        scoreboard.Draw(g);
+
+        exp.Display.Update();
     }
 }

@@ -6,9 +6,9 @@ internal class Scoreboard
     public int HighScore { get; set; }
     public int PlayerScore { get; set; }
 
-    public Scoreboard(int highScore)
+    public Scoreboard()
     {
-        HighScore = highScore;
+        HighScore = 0;
         PlayerScore = 0;
     }
 
@@ -27,6 +27,32 @@ internal class Scoreboard
 
     public void ResetPlayerScore() => PlayerScore = 0;
 
+    public Task PersistHighScore()
+    {
+        var filePath = GetHighScoreFilePath();
+        Console.WriteLine($"Persisting high score to {filePath}");
+
+        return File.WriteAllTextAsync(filePath, HighScore.ToString());
+    }
+
+    public async Task LoadPersistedHighScore()
+    {
+        var filePath = GetHighScoreFilePath();
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine($"High score file not found at {filePath}.");
+            HighScore = 0;
+            return;
+        }
+
+        var fileContent = await File.ReadAllTextAsync(filePath);
+        HighScore = int.TryParse(fileContent, out int highScore) 
+            ? highScore 
+            : 0;
+
+        Console.WriteLine($"High score loaded from {filePath}: {HighScore}");
+    }
+
     public void Draw(Graphics g)
     {
         string playerScoreText = $"Score: {PlayerScore}";
@@ -40,4 +66,6 @@ internal class Scoreboard
         g.DrawString(playerScoreText, scoreFont, scoreBrush, playerScorePos);
         g.DrawString(highScoreText, scoreFont, scoreBrush, highScorePos);
     }
+
+    private static string GetHighScoreFilePath() => Path.Combine(Path.GetTempPath(), "pong-highscore.txt");
 }

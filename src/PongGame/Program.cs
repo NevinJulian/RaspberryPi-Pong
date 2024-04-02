@@ -1,86 +1,119 @@
 ﻿using Explorer700Library;
-using System;
 using System.Drawing;
-using System.Reflection.Metadata;
 
-namespace PongGame
+namespace PongGame;
+
+internal class Program
 {
-    class Program
+    private static Explorer700 exp;
+    private static Paddle paddle;
+    private static Ball ball;
+    private static Scoreboard scoreboard;
+    private static DateTime lastPaddleMove;
+
+    private const int DisplayWidth = 128;
+    private const int DisplayHeight = 64;
+
+    static async Task Main(string[] args)
     {
-        private static Explorer700 exp;
-        private static Paddle paddle;
-        private static Ball ball;
+        Console.WriteLine("Pong Game Start...");
+        exp = new Explorer700();
 
-        private static readonly int DisplayWidth = 128;
-        private static readonly int DisplayHeight = 64;
+        SetupGame();
 
-        static void Main(string[] args)
+        while (true)
         {
-            Console.WriteLine("Pong Game Start...");
-            exp = new Explorer700();
+            // Execute Game loop
+            HandleInput();
+            UpdateGameState();
+            DrawGame();
 
-            SetupGame();
-
-            while (true)
-            {
-                HandleInput();
-                UpdateGameState();
-                DrawGame();
-                System.Threading.Thread.Sleep(20); // Adjust for game speed
-            }
+            await Task.Delay(20); // Adjust for game speed
         }
+    }
 
-        static void SetupGame()
+    static void SetupGame()
+    {
+        paddle = new Paddle(20, 0, 20, 7, DisplayHeight, 5);
+        ball = new Ball(30, 100, 1, 1, 10, DisplayHeight, DisplayWidth);
+        scoreboard = new Scoreboard(0);
+    }
+
+    static void HandleInput()
+    {
+        exp.Joystick.JoystickChanged += (_, e) =>
         {
-            paddle = new Paddle(100, 230, 50, 10);
-            ball = new Ball(120, 110, 2, 2);
-        }
+            if (e.Keys.HasFlag(Keys.Down) && IsAllowedToMovePaddle())
+            {
+                paddle.MoveRight();
+                lastPaddleMove = DateTime.UtcNow;
+            }
+            else if (e.Keys.HasFlag(Keys.Up) && IsAllowedToMovePaddle())
+            {
+                paddle.MoveLeft();
+                lastPaddleMove = DateTime.UtcNow;
+            }
+        };
 
-        static void HandleInput()
+        static bool IsAllowedToMovePaddle()
         {
-            // Use exp.Joystick.JoystickChanged event to move paddles
+            // Limit paddle movement to every 100ms
+            return DateTime.UtcNow - lastPaddleMove > TimeSpan.FromMilliseconds(100);
         }
+    }
 
-        static void UpdateGameState()
+    static void UpdateGameState()
+    {
+        // Move the ball
+        ball.Move();
+
+        // Collision with walls
+        if (ball.IsCollidingWithLeftWall() || ball.IsCollidingWithRightWall())
         {
-            // Move the ball
-            ball.Position = new PointF(ball.Position.X + ball.Velocity.X, ball.Position.Y + ball.Velocity.Y);
-
-            // Collision with walls - Left or Right
-            if (ball.Position.X < ball.Radius || ball.Position.X > DisplayWidth - ball.Radius)
-            {
-                ball.Velocity = new PointF(-ball.Velocity.X, ball.Velocity.Y);
-            }
-            if (ball.Position.Y < ball.Radius)
-            {
-                ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
-            }
-            else if (ball.Position.Y > DisplayHeight - ball.Radius) // Bottom wall
-            {
-                // Reset ball position or end game
-                ball.Position = new PointF(DisplayWidth / 2, DisplayHeight / 2);
-                ball.Velocity = new PointF(ball.Velocity.X, -2); // Example reset velocity
-            }
-
-            // Collision with paddle
-            if (ball.Position.Y + ball.Radius > paddle.Position.Y && ball.Position.X > paddle.Position.X && ball.Position.X < paddle.Position.X + paddle.Position.Width)
-            {
-                // Here we reverse the Y direction of velocity upon collision
-                ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
-
-                // Optionally, adjust ball.Velocity.X based on where it hits the paddle for more dynamics
-            }
+            // Reverse the x velocity of the ball to bounce off the wall
+            ball.Velocity = new PointF(-ball.Velocity.X, ball.Velocity.Y);
         }
-
-        static void DrawGame()
+        else if (ball.IsCollidingWithTopWall())
         {
-            Graphics g = exp.Display.Graphics;
-            g.Clear(Color.Black);
-
-            paddle.Draw(g);
-            ball.Draw(g);
-
-            exp.Display.Update(); // Update display
+            // Reverse the y velocity of the ball to bounce off the wall
+            ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
         }
+        else if (ball.IsCollidingWithPaddle(paddle))
+        {
+            // Reverse the y velocity of the ball to bounce off the paddle
+            ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
+
+            // Increase player score
+            scoreboard.IncrementPlayerScore();
+
+            // Increase ball speed
+            ball.Velocity = new PointF(ball.Velocity.X * 1.1f, ball.Velocity.Y * 1.1f);
+        }
+        else if (ball.IsCollidingWithBottomWall())
+        {
+            // Reset the ball position and velocity
+            ball.Reset();
+
+            // Check and update high score
+            if (scoreboard.UpdateHighScore())
+            {
+                // It is a high score
+                Console.WriteLine($"New High Score: {scoreboard.HighScore}");
+            }
+
+            // Reset player score
+            scoreboard.ResetPlayerScore();
+        }
+    }
+
+    static void DrawGame()
+    {
+        Graphics g = exp.Display.Graphics;
+        g.Clear(Color.Black);
+
+        paddle.Draw(g);
+        ball.Draw(g);
+
+        exp.Display.Update(); // Update display
     }
 }

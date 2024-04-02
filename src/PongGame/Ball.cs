@@ -1,36 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 
-namespace PongGame
+namespace PongGame;
+
+internal class Ball
 {
-    class Ball
+    private readonly float canvasWidth;
+    private readonly float canvasHeight;
+    private readonly PointF originalPosition;
+    private readonly PointF originalVelocity;
+
+    public PointF Position { get; set; }
+    public PointF Velocity { get; set; }
+    public float Radius { get; set; }
+
+    public Ball(float x, float y, float velocityX, float velocityY, float radius, float canvasWidth, float canvasHeight)
     {
-        public PointF Position { get; set; }
-        public PointF Velocity { get; set; }
+        originalPosition = new PointF(x, y);
+        originalVelocity = new PointF(velocityX, velocityY).TransformCoordinates();
+        Position = originalPosition;
+        Velocity = originalVelocity;
+        Radius = radius;
+        this.canvasWidth = canvasWidth;
+        this.canvasHeight = canvasHeight;
+    }
 
-        public float Radius { get; set; } = 10; // Adjust as needed
+    public void Move()
+    {
+        float newX = Position.X + Velocity.X;
+        float newY = Position.Y + Velocity.Y;
 
-        public Ball(float x, float y, float velocityX, float velocityY)
-        {
-            Position = new PointF(x, y);
-            Velocity = new PointF(velocityX, velocityY);
-        }
+        Position = new PointF(newX, newY);
+    }
 
-        public void Move()
-        {
-            float newX = Position.X + Velocity.X;
-            float newY = Position.Y + Velocity.Y;
-            
-            Position = new PointF(newX, newY);
-        }
+    public bool IsCollidingWithLeftWall() => Position.X < Radius;
 
-        public void Draw(Graphics g)
-        {
-            g.FillEllipse(Brushes.White, Position.X - Radius, Position.Y - Radius, Radius * 2, Radius * 2);
-        }
+    public bool IsCollidingWithRightWall() => Position.X > canvasWidth - Radius;
+
+    public bool IsCollidingWithTopWall() => Position.Y > canvasHeight - Radius;
+
+    public bool IsCollidingWithBottomWall() => Position.Y < Radius;
+
+    public bool IsCollidingWithPaddle(Paddle paddle) => Position.Y - Radius < paddle.Position.Location.Y + paddle.Position.Height && Position.X > paddle.Position.X && Position.X < paddle.Position.X + paddle.Position.Width;
+
+    public void Reset()
+    {
+        Position = originalPosition;
+        Velocity = originalVelocity;
+    }
+
+    public void Draw(Graphics g)
+    {
+        var transformedPosition = Position.TransformCoordinates();
+        g.FillEllipse(Brushes.White, transformedPosition.X - Radius, transformedPosition.Y - Radius, Radius * 2, Radius * 2);
     }
 }

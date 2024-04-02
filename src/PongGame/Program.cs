@@ -36,8 +36,6 @@ internal class Program
 
                 Thread.Sleep(2000);
                 GameStillRunning = true;
-
-                // Reset player score
                 scoreboard.ResetPlayerScore();
             }
 

@@ -1,5 +1,6 @@
-namespace PongGame;
 using System.Drawing;
+
+namespace PongGame;
 
 internal class Startscreen
 {
@@ -12,9 +13,9 @@ internal class Startscreen
         this.start = false;
     }
     
-    public void Draw(Graphics g, string highScore)
+    public void Draw(Graphics g, int highScore)
     {
         g.DrawString(message, new Font("Arial", 8), Brushes.White, 10, 10);
-        g.DrawString("High Score: " + highScore, new Font("Arial", 8), Brushes.White, 10, 30);
+        g.DrawString($"High Score: {highScore}", new Font("Arial", 8), Brushes.White, 10, 40);
     }
 }

@@ -15,7 +15,7 @@ internal class Program
     private static DateTime lastPaddleMove;
     private static Startscreen startscreen;
     private static bool gameRunning = false;
-    private static bool showScore;
+    private static bool showScore = false;
 
     static async Task Main(string[] args)
     {
@@ -24,57 +24,68 @@ internal class Program
 
         await SetupGame();
 
-        await Task.Delay(TimeSpan.FromSeconds(2)); // Wait for 2 seconds before starting the game
         Console.WriteLine("Starting Game loop...");
         while (true)
         {
-            if (gameRunning == false)
+            if (!gameRunning)
             {
                 if (showScore)
                 {
                     DrawScore();
-                    await Task.Delay(TimeSpan.FromSeconds(2)); // Wait for 3 seconds before going to startscreen
+
+                    await Task.Delay(TimeSpan.FromSeconds(3)); // Wait for 3 seconds before going to startscreen
+                    scoreboard.ResetPlayerScore(); // reset player score after showing it
                     showScore = false;
                 }
                 DrawStartScreen();
-                exp.Joystick.JoystickChanged += (_, e) => { gameRunning = true; };
+
+                exp.Joystick.JoystickChanged += HandleGameStartInput;
+                while (!gameRunning)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100)); // add delay to reduce CPU load
+                }
+                exp.Joystick.JoystickChanged -= HandleGameStartInput;
             }
-            else if (gameRunning == true)
+            else
             {
                 // Execute Game loop
-                HandleInput();
-                UpdateGameState();
+                await UpdateGameState();
                 DrawGame();
 
                 await Task.Delay(20); // Adjust for game speed
             }
         }
 
-
         static async Task SetupGame()
         {
             paddle = new Paddle(20, 0, 20, 7, DisplayHeight, 5);
             ball = new Ball(30, 100, 1, 1, 10, DisplayHeight, DisplayWidth);
+
             scoreboard = new Scoreboard();
             await scoreboard.LoadPersistedHighScore();
-            startscreen = new Startscreen("Pong Game, Press any key to start");
+
+            startscreen = new Startscreen($"Pong Game{Environment.NewLine}Press any key to start");
+
+            exp.Joystick.JoystickChanged += HandleGameInput;
         }
 
-        static void HandleInput()
+        static void HandleGameStartInput(object? _, KeyEventArgs e)
         {
-            exp.Joystick.JoystickChanged += (_, e) =>
+            gameRunning = true;
+        }
+
+        static void HandleGameInput(object? _, KeyEventArgs e)
+        {
+            if (e.Keys.HasFlag(Keys.Down) && IsAllowedToMovePaddle())
             {
-                if (e.Keys.HasFlag(Keys.Down) && IsAllowedToMovePaddle())
-                {
-                    paddle.MoveRight(GetAmountOfSteps(e.Keys));
-                    lastPaddleMove = DateTime.UtcNow;
-                }
-                else if (e.Keys.HasFlag(Keys.Up) && IsAllowedToMovePaddle())
-                {
-                    paddle.MoveLeft(GetAmountOfSteps(e.Keys));
-                    lastPaddleMove = DateTime.UtcNow;
-                }
-            };
+                paddle.MoveRight(GetAmountOfSteps(e.Keys));
+                lastPaddleMove = DateTime.UtcNow;
+            }
+            else if (e.Keys.HasFlag(Keys.Up) && IsAllowedToMovePaddle())
+            {
+                paddle.MoveLeft(GetAmountOfSteps(e.Keys));
+                lastPaddleMove = DateTime.UtcNow;
+            }
 
             static bool IsAllowedToMovePaddle()
             {
@@ -105,16 +116,23 @@ internal class Program
             {
                 // Reverse the y velocity of the ball to bounce off the wall
                 ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
-                exp.Buzzer.Beep(200);
 
+                _ = Task.Run(() =>
+                {
+                    exp.Buzzer.Beep(200);
+                });
             }
             else if (ball.IsCollidingWithPaddle(paddle))
             {
                 // Reverse the y velocity of the ball to bounce off the paddle
                 ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
-                exp.Buzzer.Beep(200);
-                exp.Buzzer.Beep(200);
 
+                _ = Task.Run(async () =>
+                {
+                    exp.Buzzer.Beep(200);
+                    await Task.Delay(200);
+                    exp.Buzzer.Beep(200);
+                });
 
                 // Increase player score
                 scoreboard.IncrementPlayerScore();
@@ -138,11 +156,15 @@ internal class Program
                     // Persist high score
                     await scoreboard.PersistHighScore();
                 }
-                exp.Buzzer.Beep(300);
-                exp.Buzzer.Beep(300);
-                exp.Buzzer.Beep(300);
-                // Reset player score
-                scoreboard.ResetPlayerScore();
+
+                _ = Task.Run(async () =>
+                {
+                    exp.Buzzer.Beep(300);
+                    await Task.Delay(300);
+                    exp.Buzzer.Beep(300);
+                    await Task.Delay(300);
+                    exp.Buzzer.Beep(300);
+                });
 
                 // Go back to start screen
                 gameRunning = false;
@@ -155,7 +177,7 @@ internal class Program
             Graphics g = exp.Display.Graphics;
             g.Clear(Color.Black);
 
-            startscreen.Draw(g, scoreboard.HighScore.ToString());
+            startscreen.Draw(g, scoreboard.HighScore);
 
             exp.Display.Update(); // Update display
         }

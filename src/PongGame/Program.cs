@@ -13,9 +13,9 @@ internal class Program
     private static Ball ball;
     private static Scoreboard scoreboard;
     private static DateTime lastPaddleMove;
-
-    private static bool GameStillRunning = true;
-
+    private static Startscreen startscreen;
+    private static bool gameRunning = false;
+    
     static async Task Main(string[] args)
     {
         Console.WriteLine("Pong Game Start...");
@@ -25,34 +25,42 @@ internal class Program
 
         await Task.Delay(TimeSpan.FromSeconds(2)); // Wait for 2 seconds before starting the game
         Console.WriteLine("Starting Game loop...");
-
-        while (GameStillRunning)
+        while (true)
         {
-            // Execute game loop
-            HandleInput();
-            await UpdateGameState();
-            DrawGame();
-
-            if (!GameStillRunning)
+            if (gameRunning == false)
             {
                 DrawScore();
-
-                await Task.Delay(TimeSpan.FromSeconds(3)); // Wait for 2 seconds before restarting the game
-                GameStillRunning = true;
+                await Task.Delay(TimeSpan.FromSeconds(3)); // Wait for 3 seconds before going to startscreen
                 scoreboard.ResetPlayerScore();
+                DrawStartScreen();
+                exp.Joystick.JoystickChanged += (_, e) =>
+                {
+                    gameRunning = true;
+                };
             }
+            else
+            {
+                // Execute Game loop
+                HandleInput();
+                UpdateGameState();
+                DrawGame();
 
-            await Task.Delay(TimeSpan.FromMilliseconds(20)); // Adjust for game speed
+                await Task.Delay(20); // Adjust for game speed
+            }
         }
-    }
+
 
     static async Task SetupGame()
     {
         paddle = new Paddle(20, 0, 20, 7, DisplayHeight, 5);
         ball = new Ball(30, 100, 1, 1, 10, DisplayHeight, DisplayWidth);
         scoreboard = new Scoreboard();
+        startscreen = new Startscreen("Pong Game, Press any key to start");
+
 
         await scoreboard.LoadPersistedHighScore();
+        scoreboard = new Scoreboard(0);
+        startscreen = new Startscreen("Pong Game, Press any key to start");
     }
 
     static void HandleInput()
@@ -100,11 +108,16 @@ internal class Program
         {
             // Reverse the y velocity of the ball to bounce off the wall
             ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
+            exp.Buzzer.Beep(200);
+
         }
         else if (ball.IsCollidingWithPaddle(paddle))
         {
             // Reverse the y velocity of the ball to bounce off the paddle
             ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
+            exp.Buzzer.Beep(200);
+            exp.Buzzer.Beep(200);
+
 
             // Increase player score
             scoreboard.IncrementPlayerScore();
@@ -119,7 +132,9 @@ internal class Program
 
             // Reset the ball position and velocity
             ball.Reset();
-
+            exp.Buzzer.Beep(300);
+            exp.Buzzer.Beep(300);
+            exp.Buzzer.Beep(300);
             // Check and update high score
             if (scoreboard.UpdateHighScore())
             {
@@ -131,7 +146,22 @@ internal class Program
             }
 
             GameStillRunning = false;
+            // Reset player score
+            scoreboard.ResetPlayerScore();
+            
+            // Go back to start screen
+            gameRunning = false;
         }
+    }
+    
+    static void DrawStartScreen()
+    {
+        Graphics g = exp.Display.Graphics;
+        g.Clear(Color.Black);
+
+        startscreen.Draw(g, scoreboard.HighScore.ToString());
+
+        exp.Display.Update(); // Update display
     }
 
     static void DrawGame()

@@ -4,21 +4,21 @@ namespace PongGame;
 
 internal class Ball
 {
-    private readonly float canvasWidth;
-    private readonly float canvasHeight;
-    private readonly PointF originalPosition;
-    private readonly PointF originalVelocity;
+    private readonly int canvasWidth;
+    private readonly int canvasHeight;
+    private readonly Random random = new();
+
+    private PointF originalVelocity;
 
     public PointF Position { get; set; }
     public PointF Velocity { get; set; }
-    public float Radius { get; set; }
+    public int Radius { get; set; }
 
-    public Ball(float x, float y, float velocityX, float velocityY, float radius, float canvasWidth, float canvasHeight)
+    public Ball(float x, float y, float velocityX, float velocityY, int radius, int canvasWidth, int canvasHeight)
     {
-        originalPosition = new PointF(x, y);
-        originalVelocity = new PointF(velocityX, velocityY).TransformCoordinates();
-        Position = originalPosition;
-        Velocity = originalVelocity;
+        Position = new PointF(x, y);
+        Velocity = new PointF(velocityX, velocityY);
+        originalVelocity = Velocity;
         Radius = radius;
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
@@ -40,15 +40,26 @@ internal class Ball
 
     public bool IsCollidingWithBottomWall() => Position.Y <= Radius;
 
-    public bool IsCollidingWithPaddle(Paddle paddle) => 
+    public bool IsCollidingWithPaddle(Paddle paddle) =>
         Position.Y - Radius <= paddle.Position.Location.Y + paddle.Position.Height &&
         Position.X > paddle.Position.X &&
         Position.X < paddle.Position.X + paddle.Position.Width;
 
-    public void Reset()
+    public void ResetToRandomPosition()
     {
-        Position = originalPosition;
-        Velocity = originalVelocity;
+        // set random position within the canvas
+        Position = new PointF(random.Next(Radius + 5, canvasWidth - (Radius + 5)), random.Next(20 + Radius, canvasHeight - (Radius + 5)));
+
+        // generate numbers 1 or -1 to determine the direction of the ball
+        var xVelocityMultiplicator = random.Next(0, 2) == 0
+            ? 1
+            : -1;
+
+        var yVelocityMultiplicator = random.Next(0, 2) == 0
+            ? 1
+            : -1;
+
+        Velocity = new PointF(originalVelocity.X * xVelocityMultiplicator, originalVelocity.Y * yVelocityMultiplicator);
     }
 
     public void Draw(Graphics g)

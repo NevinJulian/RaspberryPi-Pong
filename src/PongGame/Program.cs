@@ -119,27 +119,29 @@ internal class Program
             {
                 // Reverse the y velocity of the ball to bounce off the wall
                 ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
-
-                _ = Task.Run(() =>
-                {
-                    exp.Buzzer.Beep(200);
-                });
             }
             else if (ball.IsCollidingWithPaddle(paddle))
             {
                 // Reverse the y velocity of the ball to bounce off the paddle
                 ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
 
-                _ = Task.Run(async () =>
-                {
-                    exp.Buzzer.Beep(200);
-                    await Task.Delay(200);
-                    exp.Buzzer.Beep(200);
-                });
-
                 // Increase player score
                 scoreboard.IncrementPlayerScore();
                 Console.WriteLine($"Player Score: {scoreboard.PlayerScore}");
+
+                if(scoreboard.PlayerScore == scoreboard.HighScore)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        exp.Buzzer.Beep(500);
+                        await Task.Delay(500);
+                        exp.Buzzer.Beep(200);
+                        await Task.Delay(200);
+                        exp.Buzzer.Beep(200);
+                        await Task.Delay(200);
+                        exp.Buzzer.Beep(500);
+                    });
+                }
 
                 // Increase ball speed
                 ball.Velocity = new PointF(ball.Velocity.X * 1.1f, ball.Velocity.Y * 1.1f);
@@ -168,9 +170,9 @@ internal class Program
                 {
                     exp.Buzzer.Beep(300);
                     await Task.Delay(300);
-                    exp.Buzzer.Beep(300);
-                    await Task.Delay(300);
-                    exp.Buzzer.Beep(300);
+                    exp.Buzzer.Beep(500);
+                    await Task.Delay(500);
+                    exp.Buzzer.Beep(1000);
                 });
 
                 // Go back to start screen

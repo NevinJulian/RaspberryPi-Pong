@@ -4,12 +4,13 @@ namespace PongGame;
 
 internal class Paddle
 {
-    private readonly float moveSpeed;
-    private readonly float canvasWidth;
+    private readonly int moveSpeed;
+    private readonly int canvasWidth;
+    private readonly Random random = new();
 
     public RectangleF Position { get; set; }
 
-    public Paddle(float x, float y, float width, float height, float canvasWidth, float moveSpeed)
+    public Paddle(float x, float y, float width, float height, int canvasWidth, int moveSpeed)
     {
         Position = new RectangleF(x, y, width, height);
         this.canvasWidth = canvasWidth;
@@ -24,6 +25,11 @@ internal class Paddle
     public void MoveLeft(int steps)
     {
         Move(-moveSpeed * steps);
+    }
+
+    public void ResetToRandomPosition()
+    {
+        Position = new RectangleF(random.Next(0, canvasWidth - 20), Position.Y, Position.Width, Position.Height);
     }
 
     private void Move(float deltaX)

@@ -58,8 +58,11 @@ internal class Program
 
         static async Task SetupGame()
         {
-            paddle = new Paddle(20, 0, 20, 7, DisplayHeight, 5);
-            ball = new Ball(30, 100, 1, 1, 10, DisplayHeight, DisplayWidth);
+            paddle = new Paddle(0, 0, 20, 7, DisplayHeight, 5);
+            ball = new Ball(0, 0, 1, 1, 10, DisplayHeight, DisplayWidth);
+
+            paddle.ResetToRandomPosition();
+            ball.ResetToRandomPosition();
 
             scoreboard = new Scoreboard();
             await scoreboard.LoadPersistedHighScore();
@@ -146,7 +149,11 @@ internal class Program
                 Console.WriteLine($"Game Over with score {scoreboard.PlayerScore}");
 
                 // Reset the ball position and velocity
-                ball.Reset();
+                ball.ResetToRandomPosition();
+
+                // Reset the paddle position
+                paddle.ResetToRandomPosition();
+
                 // Check and update high score
                 if (scoreboard.UpdateHighScore())
                 {

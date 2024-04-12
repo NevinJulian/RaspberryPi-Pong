@@ -58,13 +58,17 @@ internal class Scoreboard
         string playerScoreText = $"Score: {PlayerScore}";
         string highScoreText = $"High Score: {HighScore}";
 
-        Font scoreFont = new Font("Arial", 12);
+        Font scoreFont = new Font("Arial", 12, FontStyle.Bold);
+        Font highScoreFont = new Font("Arial", 10);
         Brush scoreBrush = Brushes.White;
-        PointF playerScorePos = new PointF(10, 10);
-        PointF highScorePos = new PointF(10, 40);
+        PointF playerScorePos = new PointF(30, 10);
+        PointF highScorePos = new PointF(19, 33);
 
         g.DrawString(playerScoreText, scoreFont, scoreBrush, playerScorePos);
-        g.DrawString(highScoreText, scoreFont, scoreBrush, highScorePos);
+        g.DrawString(highScoreText, highScoreFont, scoreBrush, highScorePos);
+        g.FillEllipse(Brushes.White, 15, 15, 10, 10);
+        g.FillEllipse(Brushes.White, 100, 15, 10, 10);
+        g.FillRectangle(Brushes.White, 0, 60, 128,4);
     }
 
     private static string GetHighScoreFilePath() => Path.Combine(Path.GetTempPath(), "pong-highscore.txt");

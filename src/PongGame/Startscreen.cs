@@ -9,7 +9,6 @@ internal class Startscreen
     {
         
     }
-    //$"Pong Game{Environment.NewLine}Press any key to start"
     public void Draw(Graphics g, int highScore)
     {
         g.DrawString("Pong Game", new Font("Arial", 12, FontStyle.Bold), Brushes.White, 18, 10);

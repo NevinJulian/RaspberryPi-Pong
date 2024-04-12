@@ -67,7 +67,7 @@ internal class Program
             scoreboard = new Scoreboard();
             await scoreboard.LoadPersistedHighScore();
 
-            startscreen = new Startscreen($"Pong Game{Environment.NewLine}Press any key to start");
+            startscreen = new Startscreen();
 
             exp.Joystick.JoystickChanged += HandleGameInput;
         }

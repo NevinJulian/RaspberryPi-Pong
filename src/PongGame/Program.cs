@@ -119,6 +119,10 @@ internal class Program
             {
                 // Reverse the y velocity of the ball to bounce off the wall
                 ball.Velocity = new PointF(ball.Velocity.X, -ball.Velocity.Y);
+                _ = Task.Run(() =>
+                {
+                    exp.Buzzer.Beep(200);
+                });
             }
             else if (ball.IsCollidingWithPaddle(paddle))
             {

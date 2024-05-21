@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Explorer700Library", "src\Explorer700Library\Explorer700Library.csproj", "{ED0FB1B7-B280-4938-B742-601CBC762A7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PongGame", "src\PongGame\PongGame.csproj", "{E80EE844-0970-40B5-A329-52A53F5BA1C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PongGame", "src\PongGame\PongGame.csproj", "{E80EE844-0970-40B5-A329-52A53F5BA1C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +24,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5D6E657D-2B44-4EF1-B6BA-E155AD8B8F33}
 	EndGlobalSection
 EndGlobal

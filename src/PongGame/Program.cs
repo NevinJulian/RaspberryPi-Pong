@@ -17,6 +17,8 @@ internal class Program
     private static JoystickLogger joystickLogger;
     private static bool gameRunning = false;
     private static bool showScore = false;
+    private static HttpServer httpServer;
+    private static Thread serverThread;
 
     static async Task Main(string[] args)
     {
@@ -26,6 +28,10 @@ internal class Program
             Console.WriteLine("Pong Game Start...");
             exp = new Explorer700();
             joystickLogger = new JoystickLogger();
+
+            httpServer = new HttpServer(8080);
+            serverThread = new Thread(new ThreadStart(httpServer.Start));
+            serverThread.Start();
 
             await SetupGame();
 
@@ -64,6 +70,9 @@ internal class Program
         finally
         {
             joystickLogger?.Dispose();
+
+            httpServer.Stop();
+            serverThread.Join();
         }
     }
 

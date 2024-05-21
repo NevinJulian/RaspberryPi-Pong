@@ -9,32 +9,27 @@ internal class JoystickLogger : IDisposable
     public JoystickLogger()
     {
         this.logFilePath = Path.Combine(Path.GetTempPath(), "pong-joystick-logs.txt");
-        if (!File.Exists(logFilePath))
+
+        var writeHeader = !File.Exists(logFilePath); // need to check if the file exists before initializing the StreamWriter because it will create the file if it doesn't exist
+        streamWriter = new StreamWriter(new FileStream(logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read), leaveOpen: false);
+
+        if (writeHeader)
         {
-            streamWriter = new StreamWriter(new FileStream(logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read), leaveOpen: false);
             WriteHeader();
-        }
-        else
-        {
-            streamWriter = new StreamWriter(new FileStream(logFilePath, FileMode.Append, FileAccess.Write), leaveOpen: false);
         }
 
         streamWriter.AutoFlush = true;
     }
 
-    public async Task LogJoystickEvent(KeyEventArgs e)
+    public Task LogJoystickEvent(KeyEventArgs e)
     {
         if (e.Keys == Keys.NoKey)
         {
             // we don't want to log when the joystick returns to the center position
-            return;
+            return Task.CompletedTask;
         }
 
-        using (var sw = new StreamWriter(new FileStream(logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read)))
-        {
-            await sw.WriteLineAsync($"Joystick: {e.Keys}: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-            sw.Flush();
-        }
+        return streamWriter.WriteLineAsync($"Joystick: {e.Keys}: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
     }
 
     public Task<string> GetLogContent()
@@ -45,7 +40,6 @@ internal class JoystickLogger : IDisposable
 
     public void Dispose()
     {
-        Console.WriteLine("Disposing");
         streamWriter?.Dispose();
     }
 

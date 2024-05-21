@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net.Sockets;
 
 namespace PongGame
 {
-    public class HttpHandler
+    internal class HttpHandler
     {
         private TcpClient client;
+        private readonly JoystickLogger joystickLogger;
 
-        public HttpHandler(TcpClient client)
+        public HttpHandler(TcpClient client, JoystickLogger joystickLogger)
         {
             this.client = client;
+            this.joystickLogger = joystickLogger;
         }
 
-        public void Do()
+        public void HandleRequest()
         {
-            StreamReader sr = new StreamReader(client.GetStream());
-            StreamWriter sw = new StreamWriter(client.GetStream()) { AutoFlush = true };
+            using var sr = new StreamReader(client.GetStream());
+            using var sw = new StreamWriter(client.GetStream()) { AutoFlush = true };
 
             try
             {
@@ -67,28 +64,17 @@ namespace PongGame
             }
             finally
             {
-                client.Close();
+                client?.Dispose();
             }
         }
 
         private void ServeLogFile(StreamWriter sw, bool isDownload)
         {
-            string logFilePath = Path.Combine(Path.GetTempPath(), "pong-joystick-logs.txt");
-            if (!File.Exists(logFilePath))
-            {
-                sw.WriteLine("HTTP/1.1 404 Not Found");
-                sw.WriteLine("Content-Type: text/plain");
-                sw.WriteLine("Connection: close");
-                sw.WriteLine("");
-                sw.WriteLine("404 Not Found");
-                return;
-            }
-
             sw.WriteLine("HTTP/1.1 200 OK");
             if (isDownload)
             {
                 sw.WriteLine("Content-Type: application/octet-stream");
-                sw.WriteLine($"Content-Disposition: attachment; filename=\"{Path.GetFileName(logFilePath)}\"");
+                sw.WriteLine($"Content-Disposition: attachment; filename=\"pong-joystick-logs.txt\"");
             }
             else
             {
@@ -97,15 +83,8 @@ namespace PongGame
             sw.WriteLine("Connection: close");
             sw.WriteLine(""); // Leere Zeile signalisiert Ende der Header
 
-            using (var fileStream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new StreamReader(fileStream))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    sw.WriteLine(line);
-                }
-            }
+            var logContent = joystickLogger.GetLogContent().Result;
+            sw.WriteLine(logContent);
         }
 
         private void SendNotFound(StreamWriter sw)
@@ -117,9 +96,7 @@ namespace PongGame
             sw.WriteLine("404 Not Found");
         }
 
-
-
-        private void SendBadRequest(StreamWriter sw)
+        private static void SendBadRequest(StreamWriter sw)
         {
             sw.WriteLine("HTTP/1.1 400 Bad Request");
             sw.WriteLine("Content-Type: text/plain");
@@ -128,7 +105,7 @@ namespace PongGame
             sw.WriteLine("400 Bad Request");
         }
 
-        private void SendMethodNotAllowed(StreamWriter sw)
+        private static void SendMethodNotAllowed(StreamWriter sw)
         {
             sw.WriteLine("HTTP/1.1 405 Method Not Allowed");
             sw.WriteLine("Content-Type: text/plain");

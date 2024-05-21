@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PongGame
 {
-    public class HttpServer
+    internal class HttpServer : IDisposable
     {
-        private TcpListener listener;
+        private readonly TcpListener listener;
+        private readonly JoystickLogger joystickLogger;
+        private bool isRunning = true;
 
-        public HttpServer(int port)
+        public HttpServer(int port, JoystickLogger joystickLogger)
         {
-            listener = new TcpListener(IPAddress.Any, port);
+            this.listener = new TcpListener(IPAddress.Any, port);
+            this.joystickLogger = joystickLogger;
         }
 
         public void Start()
@@ -24,12 +22,20 @@ namespace PongGame
 
             try
             {
-                while (true)
+                while (isRunning)
                 {
-                    TcpClient client = listener.AcceptTcpClient();
-                    HttpHandler handler = new HttpHandler(client);
-                    Thread clientThread = new Thread(new ThreadStart(handler.Do));
-                    clientThread.Start();
+                    try
+                    {
+                        var client = listener.AcceptTcpClient();
+                        var handler = new HttpHandler(client, joystickLogger);
+                        var clientThread = new Thread(new ThreadStart(handler.HandleRequest));
+                        clientThread.Start();
+                    }
+                    catch (SocketException ex) when (ex.SocketErrorCode == SocketError.Interrupted)
+                    {
+                        // Expected exception when stopping the listener.
+                        Console.WriteLine("AcceptTcpClient interrupted due to server stopping.");
+                    }
                 }
             }
             finally
@@ -38,9 +44,12 @@ namespace PongGame
             }
         }
 
-        public void Stop()
+        public void Dispose()
         {
-            listener.Stop();
+            isRunning = false;
+            listener?.Stop();
+            listener?.Dispose();
+
             Console.WriteLine("HTTP Server stopped.");
         }
     }

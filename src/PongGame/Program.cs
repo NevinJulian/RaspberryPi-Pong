@@ -24,12 +24,12 @@ internal class Program
     {
         try
         {
-            Console.CancelKeyPress += (_, _) => { joystickLogger?.Dispose(); }; // gracefully dispose joystickLogger on Ctrl+C
+            Console.CancelKeyPress += (_, _) => { DisposeResources(); }; // gracefully dispose resources on Ctrl+C
             Console.WriteLine("Pong Game Start...");
             exp = new Explorer700();
             joystickLogger = new JoystickLogger();
 
-            httpServer = new HttpServer(8080);
+            httpServer = new HttpServer(8080, joystickLogger);
             serverThread = new Thread(new ThreadStart(httpServer.Start));
             serverThread.Start();
 
@@ -69,11 +69,16 @@ internal class Program
         }
         finally
         {
-            joystickLogger?.Dispose();
-
-            httpServer.Stop();
-            serverThread.Join();
+            DisposeResources();
         }
+    }
+
+    private static void DisposeResources()
+    {
+        joystickLogger?.Dispose();
+
+        httpServer?.Dispose();
+        serverThread.Join();
     }
 
     private static async Task SetupGame()
